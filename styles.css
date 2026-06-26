@@ -1,0 +1,145 @@
+/* @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap'); */
+
+/* Modern visual aesthetic overrides for Streamlit */
+
+html, body, [class*="css"], .stApp {
+    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Glassmorphic card design */
+.glass-card {
+    background: rgba(30, 41, 59, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+    border: 1px solid rgba(139, 92, 246, 0.3); /* Purple accent highlight */
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px 0 rgba(139, 92, 246, 0.1);
+}
+
+/* Metric card specific styling */
+.metric-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 4px 20px 0 rgba(0,0,0,0.15);
+}
+
+.metric-value {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+/* Color codes for metrics */
+.metric-selected {
+    color: #10B981; /* Emerald-500 */
+    text-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+}
+
+.metric-rejected {
+    color: #EF4444; /* Red-500 */
+    text-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+}
+
+.metric-deferred {
+    color: #F59E0B; /* Amber-500 */
+    text-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+}
+
+.metric-queries {
+    color: #3B82F6; /* Blue-500 */
+    text-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
+/* Accent Header and badges */
+.badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badge-selected {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #34D399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-rejected {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #F87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-deferred {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #FBBF24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-unevaluated {
+    background-color: rgba(107, 114, 128, 0.15);
+    color: #9CA3AF;
+    border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+/* Timeline Custom Styles */
+.timeline-item {
+    border-left: 2px dashed rgba(139, 92, 246, 0.3);
+    padding-left: 20px;
+    padding-bottom: 20px;
+    position: relative;
+}
+
+.timeline-item:last-child {
+    border-left: none;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -7px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #8B5CF6;
+    border: 2px solid #0F172A;
+    box-shadow: 0 0 10px #8B5CF6;
+}
+
+.timeline-date {
+    font-size: 12px;
+    color: #64748B;
+    margin-bottom: 4px;
+}
+
+.timeline-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #F1F5F9;
+}
+
+/* Micro-animations */
+@keyframes pulseGlow {
+    0% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.2); }
+    50% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+    100% { box-shadow: 0 0 10px rgba(139, 92, 246, 0.2); }
+}
+
+.glow-btn {
+    animation: pulseGlow 3s infinite;
+}

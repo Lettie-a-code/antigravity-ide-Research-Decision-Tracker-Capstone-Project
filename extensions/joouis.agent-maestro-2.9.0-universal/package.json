@@ -1,0 +1,250 @@
+{
+	"name": "agent-maestro",
+	"displayName": "Agent Maestro",
+	"description": "Turn VS Code into your compliant AI playground! With Agent Maestro, spin up Cline or Roo on demand and plug Claude Code or Codex straight in through an OpenAI/Anthropic-compatible API.",
+	"version": "2.9.0",
+	"icon": "assets/icons/icon.png",
+	"publisher": "Joouis",
+	"repository": "https://github.com/Joouis/agent-maestro",
+	"engines": {
+		"vscode": "^1.100.0",
+		"node": ">=22"
+	},
+	"packageManager": "pnpm@10.28.2",
+	"categories": [
+		"AI",
+		"Chat",
+		"Data Science",
+		"Debuggers",
+		"Extension Packs",
+		"Programming Languages",
+		"Education",
+		"Snippets",
+		"Testing",
+		"Other"
+	],
+	"keywords": [
+		"cline",
+		"roo-code",
+		"kilocode",
+		"vibe coding",
+		"developer",
+		"mcp",
+		"coding",
+		"agent",
+		"autonomous",
+		"ai",
+		"github copilot",
+		"github copilot chat",
+		"anthropic",
+		"claude code",
+		"claude",
+		"openai",
+		"codex",
+		"gpt",
+		"gemini",
+		"gemini cli",
+		"proxy",
+		"api"
+	],
+	"type": "module",
+	"main": "./dist/extension.cjs",
+	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "Agent Maestro Configuration",
+			"properties": {
+				"agent-maestro.rooVariantIdentifiers": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [
+						"kilocode.kilo-code"
+					],
+					"description": "List of extension identifiers that are considered Roo variants (need restart to take effect)",
+					"scope": "application"
+				},
+				"agent-maestro.defaultRooIdentifier": {
+					"type": "string",
+					"default": "rooveterinaryinc.roo-cline",
+					"description": "Default Roo extension identifier to use when multiple variants are available (need restart to take effect)"
+				},
+				"agent-maestro.proxyServerPort": {
+					"type": "number",
+					"default": 23333,
+					"description": "Port for the Agent Maestro proxy server (need restart to take effect)"
+				},
+				"agent-maestro.mcpServerPort": {
+					"type": "number",
+					"default": 23334,
+					"description": "Port for the Agent Maestro MCP server (need restart to take effect)"
+				},
+				"agent-maestro.allowOutsideWorkspaceAccess": {
+					"type": "boolean",
+					"default": false,
+					"description": "Allow the extension to access files outside of the current workspace",
+					"scope": "application"
+				},
+				"agent-maestro.codex.contextWindowScaleFactor": {
+					"type": "number",
+					"default": 1,
+					"minimum": 0.1,
+					"maximum": 2,
+					"description": "Scale factor for calculating `model_context_window` in Codex config. This compensates for the difference between local and API token counting. A value of 1 means the local context window is set to 100% of the model's reported max input tokens.",
+					"scope": "application"
+				},
+				"agent-maestro.anthropic.tokenCountScaleFactor": {
+					"type": "number",
+					"default": 1.25,
+					"minimum": 0.1,
+					"maximum": 2,
+					"description": "Scale factor applied to token counts from VS Code's API to approximate Anthropic's actual token usage. Higher values provide more buffer against context window limits but reduce usable context. Default 1.25 means VS Code token counts are multiplied by 1.25.",
+					"scope": "application"
+				}
+			}
+		},
+		"commands": [
+			{
+				"command": "agent-maestro.getStatus",
+				"title": "Get Extensions Status",
+				"category": "Agent Maestro"
+			},
+			{
+				"command": "agent-maestro.startProxyServer",
+				"title": "Start API Server",
+				"category": "Agent Maestro"
+			},
+			{
+				"command": "agent-maestro.stopProxyServer",
+				"title": "Stop API Server",
+				"category": "Agent Maestro"
+			},
+			{
+				"command": "agent-maestro.restartProxyServer",
+				"title": "Restart API Server",
+				"category": "Agent Maestro"
+			},
+			{
+				"command": "agent-maestro.getProxyServerStatus",
+				"title": "Get API Server Status",
+				"category": "Agent Maestro"
+			},
+			{
+				"command": "agent-maestro.startMcpServer",
+				"title": "Start MCP Server",
+				"category": "Agent Maestro"
+			},
+			{
+				"command": "agent-maestro.stopMcpServer",
+				"title": "Stop MCP Server",
+				"category": "Agent Maestro"
+			},
+			{
+				"command": "agent-maestro.getMcpServerStatus",
+				"title": "Get MCP Server Status",
+				"category": "Agent Maestro"
+			},
+			{
+				"command": "agent-maestro.installMcpConfig",
+				"title": "Install MCP Configuration",
+				"category": "Agent Maestro"
+			},
+			{
+				"command": "agent-maestro.configureClaudeCode",
+				"title": "Configure Claude Code Settings",
+				"category": "Agent Maestro"
+			},
+			{
+				"command": "agent-maestro.configureCodex",
+				"title": "Configure Codex Settings",
+				"category": "Agent Maestro"
+			},
+			{
+				"command": "agent-maestro.configureGeminiCli",
+				"title": "Configure Gemini CLI Settings",
+				"category": "Agent Maestro"
+			},
+			{
+				"command": "agent-maestro.fixCopilotChatModelNotSupported",
+				"title": "Fix GitHub Copilot Chat - Model is not supported error",
+				"category": "Agent Maestro"
+			},
+			{
+				"command": "agent-maestro.setLlmApiKey",
+				"title": "Set LLM API Key",
+				"category": "Agent Maestro"
+			}
+		]
+	},
+	"activationEvents": [
+		"onLanguage",
+		"onStartupFinished"
+	],
+	"dependencies": {
+		"@anthropic-ai/sdk": "^0.96.0",
+		"@google/genai": "^1.29.1",
+		"@hono/node-server": "^1.17.1",
+		"@hono/zod-openapi": "^1.0.2",
+		"@roo-code/types": "^1.86.0",
+		"axios": "^1.9.0",
+		"es-toolkit": "^1.39.3",
+		"fastmcp": "^3.5.0",
+		"hono": "^4.8.9",
+		"openai": "^6.17.0",
+		"smol-toml": "^1.6.0",
+		"uuid": "^11.1.0",
+		"zod": "^4.0.10"
+	},
+	"devDependencies": {
+		"@changesets/cli": "^2.29.4",
+		"@trivago/prettier-plugin-sort-imports": "^5.2.2",
+		"@types/mocha": "^10.0.10",
+		"@types/node": "20.x",
+		"@types/vscode": "^1.100.0",
+		"@typescript-eslint/eslint-plugin": "^8.31.1",
+		"@typescript-eslint/parser": "^8.31.1",
+		"@vscode/test-cli": "^0.0.10",
+		"@vscode/test-electron": "^2.5.2",
+		"@vscode/vsce": "^3.7.0",
+		"esbuild": "^0.25.3",
+		"eslint": "^9.25.1",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.1.0",
+		"npm-run-all": "^4.1.5",
+		"ovsx": "^0.10.4",
+		"prettier": "3.5.3",
+		"rimraf": "^6.0.1",
+		"typescript": "^5.8.3"
+	},
+	"scripts": {
+		"vscode:prepublish": "pnpm run build:prod",
+		"vscode:package": "vsce package --no-dependencies",
+		"publish:vs-marketplace": "vsce publish --no-dependencies",
+		"publish:open-vsx": "ovsx publish --no-dependencies",
+		"build": "pnpm run check-types && pnpm run lint && node esbuild.js",
+		"build:prod": "rimraf dist && pnpm run check-types && pnpm run lint && node esbuild.js --production",
+		"build-tests": "tsc -p tsconfig.test.json && node -e \"require('fs').writeFileSync('out/package.json','{\\\"type\\\":\\\"commonjs\\\"}')\"",
+		"watch": "npm-run-all -p watch:*",
+		"watch:esbuild": "node esbuild.js --watch",
+		"watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+		"watch-tests": "tsc -p tsconfig.test.json -w",
+		"pretest": "pnpm run build-tests && pnpm run build && pnpm run lint",
+		"check-types": "tsc --noEmit",
+		"lint": "eslint src",
+		"test": "vscode-test",
+		"prepare": "husky",
+		"changeset": "changeset",
+		"changeset:version": "pnpm changeset version && node .changeset/changelog-polish.js",
+		"changeset:tag": "changeset tag",
+		"mcp-inspector": "npx @modelcontextprotocol/inspector"
+	},
+	"lint-staged": {
+		"**/*": "prettier --write --ignore-unknown"
+	},
+	"__metadata": {
+		"installedTimestamp": 1782162126163,
+		"targetPlatform": "universal",
+		"size": 2489250
+	}
+}
