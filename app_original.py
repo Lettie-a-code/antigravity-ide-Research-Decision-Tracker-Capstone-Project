@@ -268,8 +268,7 @@ else:
         st.subheader("Log Research Activities & Papers")
         
         # Two modes: Search & API, or Manual Entry
-        # Three modes: Search & API, Manual Entry, or CSV Import
-        tab_api, tab_manual, tab_csv = st.tabs(["🔍 Search API / Lookup DOI", "✍️ Manual Entry & Log Query", "📄 CSV Import"])
+        tab_api, tab_manual = st.tabs(["🔍 Search API / Lookup DOI", "✍️ Manual Entry & Log Query"])
         
         with tab_api:
             st.markdown("#### Look up literature using open-access databases")
@@ -277,7 +276,6 @@ else:
             # Step 1: Log query
             api_choice = st.selectbox("Select Database API", ["OpenAlex (Cross-disciplinary & Open)", "arXiv (Physics, CS, Math, Bio)"])
             search_input = st.text_input("Enter Search Terms or DOI", placeholder="e.g. Local-first databases, or 10.1145/3475738")
-            detect_doi = st.checkbox("Auto-detect and resolve DOIs in search", value=False, help="If checked, queries containing '10.' and '/' will be resolved directly as DOIs rather than performing a standard keyword search.")
             
             col_search_btn, col_skip_btn = st.columns([1, 4])
             with col_search_btn:
@@ -287,7 +285,7 @@ else:
                 query_text = search_input.strip()
                 
                 # Check if it's a DOI
-                is_doi = detect_doi and ("10." in query_text) and ("/" in query_text)
+                is_doi = ("10." in query_text) and ("/" in query_text)
                 
                 st.markdown("---")
                 with st.spinner("Fetching papers..."):
@@ -329,12 +327,7 @@ else:
                                 url=r['url'],
                                 doi=r['doi'],
                                 abstract=r['abstract'],
-                                source_query_id=qid,
-                                publication_date=str(r['year']) if r['year'] else "",
-                                link=r['url'],
-                                related_topics="",
-                                initial_notes="Fetched via API search.",
-                                summary=r['abstract']
+                                source_query_id=qid
                             )
                             st.success(f"Paper '{r['title']}' saved to database!")
                             st.rerun()
@@ -359,14 +352,10 @@ else:
                     p_title = st.text_input("Paper Title *")
                     p_authors = st.text_input("Authors")
                     p_journal = st.text_input("Journal / Conference")
-                    p_pub_date = st.text_input("Publication Date", placeholder="e.g., 2026-06-25 or June 2026")
-                    p_year_val = st.text_input("Publication Year", placeholder="e.g., 2026")
-                    p_link = st.text_input("Link")
+                    p_year = st.number_input("Publication Year", min_value=1800, max_value=2030, value=2026)
+                    p_url = st.text_input("URL")
                     p_doi = st.text_input("DOI")
-                    p_related = st.text_input("Related Topics", placeholder="e.g., SQLite, local-first")
-                    p_notes = st.text_area("Initial Notes")
-                    p_summary = st.text_area("Summary")
-                    p_abstract = st.text_area("Abstract")
+                    p_abstract = st.text_area("Abstract / Summary")
                     
                     # Associate with a logged query
                     queries = db.get_queries(active_pid)
@@ -378,189 +367,19 @@ else:
                     
                     p_sub = st.form_submit_button("Record Paper", type="primary")
                     if p_sub and p_title.strip():
-                        # Extract and sync values
-                        year_val = None
-                        if p_year_val.strip():
-                            try:
-                                year_val = int(p_year_val.strip())
-                            except ValueError:
-                                pass
-                        if year_val is None and p_pub_date.strip():
-                            import re
-                            year_match = re.search(r'\b(19|20)\d{2}\b', p_pub_date)
-                            if year_match:
-                                year_val = int(year_match.group(0))
-                                
-                        url_val = p_link.strip()
-                        
-                        abstract_val = p_abstract.strip()
-                        summary_val = p_summary.strip()
-                        if not abstract_val and summary_val:
-                            abstract_val = summary_val
-                        elif not summary_val and abstract_val:
-                            summary_val = abstract_val
-                            
                         db.add_resource(
                             project_id=active_pid,
                             title=p_title.strip(),
                             authors=p_authors.strip(),
                             journal=p_journal.strip(),
-                            year=year_val,
-                            url=url_val,
+                            year=int(p_year),
+                            url=p_url.strip(),
                             doi=p_doi.strip(),
-                            abstract=abstract_val,
-                            source_query_id=query_options[assoc_q],
-                            publication_date=p_pub_date.strip(),
-                            link=p_link.strip(),
-                            related_topics=p_related.strip(),
-                            initial_notes=p_notes.strip(),
-                            summary=summary_val
+                            abstract=p_abstract.strip(),
+                            source_query_id=query_options[assoc_q]
                         )
                         st.success(f"Paper '{p_title}' recorded!")
                         st.rerun()
-
-        with tab_csv:
-            st.markdown("#### Upload and Import Literature from CSV")
-            uploaded_file = st.file_uploader(
-                "Upload Literature CSV",
-                type=["csv"]
-            )
-            
-            if uploaded_file is not None:
-                try:
-                    df = pd.read_csv(uploaded_file)
-                    st.success("CSV file loaded successfully!")
-                    
-                    # Display it for review
-                    st.markdown("### CSV Preview:")
-                    st.dataframe(df, use_container_width=True)
-                    
-                    # Map columns case-insensitively
-                    cols = {c.lower().replace(" ", "_"): c for c in df.columns}
-                    
-                    title_col = cols.get("paper_title") or cols.get("title") or cols.get("paper title") or cols.get("name")
-                    authors_col = cols.get("authors") or cols.get("author") or cols.get("creator")
-                    journal_col = cols.get("journal") or cols.get("venue") or cols.get("conference")
-                    pub_date_col = cols.get("publication_date") or cols.get("publication date") or cols.get("date") or cols.get("published")
-                    year_col = cols.get("year")
-                    link_col = cols.get("link") or cols.get("url") or cols.get("uri") or cols.get("href")
-                    doi_col = cols.get("doi")
-                    topics_col = cols.get("related_topics") or cols.get("related topics") or cols.get("topics") or cols.get("keywords")
-                    notes_col = cols.get("initial_notes") or cols.get("initial notes") or cols.get("notes")
-                    summary_col = cols.get("summary")
-                    abstract_col = cols.get("abstract") or cols.get("description")
-                    query_col = cols.get("source_query") or cols.get("source query") or cols.get("query")
-                    
-                    # Fetch existing DOIs to check duplicates
-                    existing_resources = db.get_resources(active_pid)
-                    existing_dois = {r['doi'].strip().lower() for r in existing_resources if r['doi'] and r['doi'].strip()}
-                    
-                    # Fetch queries for source query matching
-                    queries = db.get_queries(active_pid)
-                    query_text_to_id = {q['query_text'].strip().lower(): q['id'] for q in queries}
-                    
-                    st.markdown("### Select papers to import into Workspace:")
-                    
-                    for idx, row in df.iterrows():
-                        # Extract fields with safe fallbacks
-                        title = str(row[title_col]) if title_col and pd.notna(row[title_col]) else "Untitled Paper"
-                        authors = str(row[authors_col]) if authors_col and pd.notna(row[authors_col]) else ""
-                        journal = str(row[journal_col]) if journal_col and pd.notna(row[journal_col]) else ""
-                        pub_date = str(row[pub_date_col]) if pub_date_col and pd.notna(row[pub_date_col]) else ""
-                        
-                        year_val = None
-                        if year_col and pd.notna(row[year_col]):
-                            try:
-                                year_val = int(row[year_col])
-                            except ValueError:
-                                pass
-                        if year_val is None and pub_date:
-                            import re
-                            year_match = re.search(r'\b(19|20)\d{2}\b', pub_date)
-                            if year_match:
-                                year_val = int(year_match.group(0))
-                                
-                        link = str(row[link_col]) if link_col and pd.notna(row[link_col]) else ""
-                        doi = str(row[doi_col]).strip() if doi_col and pd.notna(row[doi_col]) else ""
-                        topics = str(row[topics_col]) if topics_col and pd.notna(row[topics_col]) else ""
-                        notes = str(row[notes_col]) if notes_col and pd.notna(row[notes_col]) else ""
-                        summary = str(row[summary_col]) if summary_col and pd.notna(row[summary_col]) else ""
-                        abstract = str(row[abstract_col]) if abstract_col and pd.notna(row[abstract_col]) else ""
-                        query_text_val = str(row[query_col]).strip() if query_col and pd.notna(row[query_col]) else ""
-                        
-                        # Populate fallbacks
-                        if not summary and abstract:
-                            summary = abstract
-                        elif not abstract and summary:
-                            abstract = summary
-                            
-                        # Display card
-                        st.markdown(f'<div class="glass-card">', unsafe_allow_html=True)
-                        st.markdown(f"#### {title}")
-                        st.markdown(f"**Authors**: {authors or 'N/A'} | **Journal**: {journal or 'N/A'}")
-                        st.markdown(f"**Publication Date**: {pub_date or 'N/A'} (Year: {year_val or 'N/A'})")
-                        if link:
-                            st.markdown(f"[Link]({link}) | DOI: {doi or 'N/A'}")
-                        else:
-                            st.markdown(f"DOI: {doi or 'N/A'}")
-                        if topics:
-                            st.markdown(f"**Related Topics**: {topics}")
-                        if notes:
-                            st.markdown(f"**Initial Notes**: {notes}")
-                        if summary:
-                            st.markdown(f"**Summary**: {summary}")
-                        if query_text_val:
-                            st.markdown(f"**Source Query**: {query_text_val}")
-                            
-                        # Check duplicate DOI
-                        is_duplicate = False
-                        if doi and doi.lower() in existing_dois:
-                            is_duplicate = True
-                            st.warning(f"⚠️ A paper with DOI '{doi}' is already in this project workspace.")
-                            
-                        btn_key = f"import_csv_row_{idx}"
-                        
-                        # Show warning but do not block adding the paper
-                        if st.button("Add to Workspace", key=btn_key, type="secondary" if is_duplicate else "primary", help="This DOI already exists in the project workspace." if is_duplicate else None):
-                            # Handle Source Query
-                            source_query_id = None
-                            if query_text_val:
-                                match_key = query_text_val.lower()
-                                if match_key in query_text_to_id:
-                                    source_query_id = query_text_to_id[match_key]
-                                else:
-                                    # Create new search query in db
-                                    source_query_id = db.log_query(
-                                        project_id=active_pid,
-                                        query_text=query_text_val,
-                                        engine="CSV Import",
-                                        notes="Query automatically created during CSV import."
-                                    )
-                                    query_text_to_id[match_key] = source_query_id
-                                    
-                            # Insert resource
-                            db.add_resource(
-                                project_id=active_pid,
-                                title=title,
-                                authors=authors,
-                                journal=journal,
-                                year=year_val,
-                                url=link,
-                                doi=doi,
-                                abstract=abstract,
-                                source_query_id=source_query_id,
-                                publication_date=pub_date,
-                                link=link,
-                                related_topics=topics,
-                                initial_notes=notes,
-                                summary=summary
-                            )
-                            st.success(f"Paper '{title}' imported successfully!")
-                            st.rerun()
-                                
-                        st.markdown('</div>', unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"Error parsing CSV: {e}")
                         
         # Section 2: Manage & Evaluate papers in Project Workspace
         st.markdown("---")
@@ -586,39 +405,12 @@ else:
                 with col_status:
                     st.markdown(f'<div style="text-align:right;"><span class="badge {badge_class}">{status_str}</span></div>', unsafe_allow_html=True)
                 
-                st.markdown(f"**Authors**: {res['authors'] or 'Unknown Authors'} | **Journal/Venue**: {res['journal'] or 'N/A'}")
-                st.markdown(f"**Publication Date**: {res['publication_date'] or 'N/A'} (Year: {res['year'] or 'N/A'})")
+                st.markdown(f"**Authors**: {res['authors']} | **Journal/Venue**: {res['journal']} ({res['year']})")
+                if res['url']:
+                    st.markdown(f"[Link to Document]({res['url']}) | DOI: {res['doi'] or 'N/A'}")
                 
-                doc_link = res['link'] or res['url']
-                if doc_link:
-                    st.markdown(f"[Link to Document]({doc_link}) | DOI: {res['doi'] or 'N/A'}")
-                else:
-                    st.markdown(f"DOI: {res['doi'] or 'N/A'}")
-                
-                if res['related_topics']:
-                    st.markdown(f"**Related Topics**: {res['related_topics']}")
-                
-                # Fetch query mappings to display associated source query
-                queries = db.get_queries(active_pid)
-                query_map = {q['id']: f"{q['query_text']} ({q['engine']})" for q in queries}
-                
-                if res['source_query_id'] and res['source_query_id'] in query_map:
-                    st.markdown(f"**Source Query**: {query_map[res['source_query_id']]}")
-                
-                if res['date_added']:
-                    st.markdown(f"**Date Added**: {res['date_added']}")
-                
-                # Show both initial notes and abstract
-                col_exp1, col_exp2, col_exp3 = st.columns(3)
-                with col_exp1:
-                    with st.expander("📖 View Abstract"):
-                        st.write(res['abstract'] or "No abstract available.")
-                with col_exp2:
-                    with st.expander("📝 View Initial Notes"):
-                        st.write(res['initial_notes'] or "No initial notes available.")
-                with col_exp3:
-                    with st.expander("💡 View Summary"):
-                        st.write(res['summary'] or "No summary available.")
+                with st.expander("📖 View Abstract"):
+                    st.write(res['abstract'])
                 
                 # Decision panel
                 with st.expander("📝 Make / Update Research Decision"):
@@ -708,7 +500,7 @@ else:
                 label_text = f"📄 {title_clean[:25]}..."
                 
                 # Tooltip text
-                tooltip = f"Title: {r['title']}\nAuthors: {r['authors'] or 'N/A'}\nJournal: {r['journal'] or 'N/A'}\nPublication Date: {r['publication_date'] or 'N/A'}\nStatus: {status or 'Unevaluated'}"
+                tooltip = f"Title: {r['title']}\nAuthors: {r['authors']}\nStatus: {status or 'Unevaluated'}"
                 if r['justification']:
                     tooltip += f"\nJustification: {r['justification']}"
                 
@@ -900,31 +692,16 @@ else:
             
             md_report += "## Literature Summary & Decisions\n"
             if resources:
-                query_map = {q['id']: f"{q['query_text']} ({q['engine']})" for q in queries}
                 for r in resources:
                     status = r['status'] or "Unevaluated"
                     md_report += f"### {r['title']}\n"
-                    md_report += f"- **Authors**: {r['authors'] or 'N/A'}\n"
-                    md_report += f"- **Venue/Year**: {r['journal'] or 'N/A'} ({r['year'] or 'N/A'})\n"
-                    md_report += f"- **Publication Date**: {r['publication_date'] or 'N/A'}\n"
+                    md_report += f"- **Authors**: {r['authors']}\n"
+                    md_report += f"- **Venue/Year**: {r['journal']} ({r['year']})\n"
                     md_report += f"- **Status**: `{status.upper()}`\n"
-                    doc_link = r['link'] or r['url']
-                    if doc_link:
-                        md_report += f"- **Link**: {doc_link}\n"
+                    if r['url']:
+                        md_report += f"- **URL**: {r['url']}\n"
                     if r['doi']:
                         md_report += f"- **DOI**: {r['doi']}\n"
-                    if r['related_topics']:
-                        md_report += f"- **Related Topics**: {r['related_topics']}\n"
-                    if r['date_added']:
-                        md_report += f"- **Date Added**: {r['date_added']}\n"
-                    if r['source_query_id'] and r['source_query_id'] in query_map:
-                        md_report += f"- **Source Query**: {query_map[r['source_query_id']]}\n"
-                    if r['abstract']:
-                        md_report += f"- **Abstract**: {r['abstract']}\n"
-                    if r['initial_notes']:
-                        md_report += f"- **Initial Notes**: {r['initial_notes']}\n"
-                    if r['summary']:
-                        md_report += f"- **Summary**: {r['summary']}\n"
                     if r['justification']:
                         md_report += f"- **Justification**: {r['justification']}\n"
                     if r['decision_notes']:
@@ -953,39 +730,23 @@ else:
                 for r in selected_papers:
                     # Generate citekey
                     author_last = "unknown"
-                    if r['authors'] and r['authors'].strip():
-                        first_author = r['authors'].split(',')[0].split(';')[0].strip()
-                        author_last = first_author.split(' ')[-1].lower().replace('et', '').replace('al.', '').strip()
+                    if r['authors']:
+                        author_last = r['authors'].split(',')[0].split(' ')[-1].lower().replace('et', '').replace('al.', '').strip()
                         if not author_last:
                             author_last = "ref"
-                            
-                    year_val = r['year']
-                    if not year_val and r['publication_date']:
-                        import re
-                        year_match = re.search(r'\b(19|20)\d{2}\b', r['publication_date'])
-                        if year_match:
-                            year_val = int(year_match.group(0))
-                    if not year_val:
-                        year_val = 2026
-                        
-                    title_first_word = r['title'].split(' ')[0].lower().replace(':', '').replace(',', '').replace('"', '').replace("'", "")
+                    year_val = r['year'] or "2026"
+                    title_first_word = r['title'].split(' ')[0].lower().replace(':', '').replace(',', '')
                     citekey = f"{author_last}{year_val}{title_first_word}"
-                    
-                    doc_link = r['link'] or r['url']
                     
                     bib_content += f"@article{{{citekey},\n"
                     bib_content += f"  title = {{{r['title']}}},\n"
-                    if r['authors']:
-                        bib_content += f"  author = {{{r['authors']}}},\n"
-                    if r['journal']:
-                        bib_content += f"  journal = {{{r['journal']}}},\n"
+                    bib_content += f"  author = {{{r['authors']}}},\n"
+                    bib_content += f"  journal = {{{r['journal']}}},\n"
                     bib_content += f"  year = {{{year_val}}},\n"
-                    if r['publication_date']:
-                        bib_content += f"  note = {{Published: {r['publication_date']}}},\n"
                     if r['doi']:
                         bib_content += f"  doi = {{{r['doi']}}},\n"
-                    if doc_link:
-                        bib_content += f"  url = {{{doc_link}}},\n"
+                    if r['url']:
+                        bib_content += f"  url = {{{r['url']}}},\n"
                     bib_content += "}\n\n"
                     
             st.text_area("Preview BibTeX citations", value=bib_content, height=350)

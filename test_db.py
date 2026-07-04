@@ -37,9 +37,26 @@ def run_tests():
         url="https://example.com/pqc",
         doi="10.1234/testdoi",
         abstract="This paper discusses how quantum computers affect current public key cryptosystems and evaluates transition options.",
-        source_query_id=query_id
+        source_query_id=query_id,
+        publication_date="2025-10-15",
+        link="https://example.com/pqc-link",
+        related_topics="cryptography, quantum, security",
+        initial_notes="Looks like a good introductory paper.",
+        summary="A summary of post-quantum cryptography transition paths."
     )
     print(f"Added resource with ID: {resource_id}")
+    
+    # Retrieve and verify resource fields
+    resources = db.get_resources(project_id)
+    assert len(resources) > 0, "No resources found!"
+    res = resources[0]
+    assert res['publication_date'] == "2025-10-15", "publication_date mismatch!"
+    assert res['link'] == "https://example.com/pqc-link", "link mismatch!"
+    assert res['related_topics'] == "cryptography, quantum, security", "related_topics mismatch!"
+    assert res['initial_notes'] == "Looks like a good introductory paper.", "initial_notes mismatch!"
+    assert res['summary'] == "A summary of post-quantum cryptography transition paths.", "summary mismatch!"
+    assert res['date_added'] is not None, "date_added was not automatically generated!"
+    print("All extended fields verified successfully in database.")
     
     # Record decision
     print("Testing Decision Recording...")

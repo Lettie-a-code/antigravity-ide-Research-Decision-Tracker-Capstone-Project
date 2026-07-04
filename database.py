@@ -50,6 +50,12 @@ def init_db():
         abstract TEXT,
         source_query_id INTEGER,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        publication_date TEXT,
+        link TEXT,
+        related_topics TEXT,
+        initial_notes TEXT,
+        summary TEXT,
+        date_added TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
         FOREIGN KEY (source_query_id) REFERENCES queries(id) ON DELETE SET NULL
     )
@@ -81,6 +87,23 @@ def init_db():
     )
     """)
     
+    # Check if table exists and needs migration (adding new columns)
+    cursor.execute("PRAGMA table_info(resources)")
+    columns = [row[1] for row in cursor.fetchall()]
+    if columns:  # table exists
+        if "publication_date" not in columns:
+            cursor.execute("ALTER TABLE resources ADD COLUMN publication_date TEXT;")
+        if "link" not in columns:
+            cursor.execute("ALTER TABLE resources ADD COLUMN link TEXT;")
+        if "related_topics" not in columns:
+            cursor.execute("ALTER TABLE resources ADD COLUMN related_topics TEXT;")
+        if "initial_notes" not in columns:
+            cursor.execute("ALTER TABLE resources ADD COLUMN initial_notes TEXT;")
+        if "summary" not in columns:
+            cursor.execute("ALTER TABLE resources ADD COLUMN summary TEXT;")
+        if "date_added" not in columns:
+            cursor.execute("ALTER TABLE resources ADD COLUMN date_added TIMESTAMP;")
+            
     conn.commit()
     conn.close()
 
@@ -153,13 +176,26 @@ def get_queries(project_id):
     return rows
 
 # Resource Helpers
-def add_resource(project_id, title, authors, journal, year, url, doi, abstract, source_query_id=None):
+def add_resource(project_id, title, authors=None, journal=None, year=None, url=None, doi=None, abstract=None, source_query_id=None,
+                 publication_date=None, link=None, related_topics=None, initial_notes=None, summary=None, date_added=None):
     conn = get_connection()
     cursor = conn.cursor()
+    
+    # If date_added is not specified, generate it in standard timestamp format
+    if date_added is None:
+        import datetime
+        date_added = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
     cursor.execute("""
-    INSERT INTO resources (project_id, title, authors, journal, year, url, doi, abstract, source_query_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (project_id, title, authors, journal, year, url, doi, abstract, source_query_id))
+    INSERT INTO resources (
+        project_id, title, authors, journal, year, url, doi, abstract, source_query_id,
+        publication_date, link, related_topics, initial_notes, summary, date_added
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        project_id, title, authors, journal, year, url, doi, abstract, source_query_id,
+        publication_date, link, related_topics, initial_notes, summary, date_added
+    ))
     resource_id = cursor.lastrowid
     # Log to timeline
     cursor.execute("""
