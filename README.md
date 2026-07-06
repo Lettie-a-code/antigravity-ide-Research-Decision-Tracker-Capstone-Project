@@ -26,12 +26,12 @@ Before installing, ensure you have:
 https://www.python.org/downloads/windows/
 
 During installation:
-- ✔ Check **"Add Python to PATH"**
-- ✔ Choose **"Install Now"**
+- Check **"Add Python to PATH"**
+- Choose **"Install Now"**
  
 ### macOS
 Install via Homebrew:
-```bash
+'''bash
 brew install python
 Or download from:
 https://www.python.org/downloads/macos/
