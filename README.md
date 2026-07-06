@@ -1,9 +1,9 @@
-📘 Installation Instructions
+# 📘 Installation Instructions
 
-# Antigravity Streamlit Project
+## Antigravity Streamlit Project
 
 This project is a Streamlit-based web application designed to run locally on
-Windows, macOS, or Linux. The instructions below explain how to install
+**Windows, macOS, or Linux**. The instructions below explain how to install
 dependencies, clone the repository, and launch the application on any system.
 
 ---
@@ -59,18 +59,18 @@ sudo apt install git
 ## 📥 4. Clone the Repository
 
 Open a terminal (Command Prompt, PowerShell, macOS Terminal, or Linux shell):
-git clone https://github.com/your-username/your-antigravity-repo.git
+git clone https://github.com/Lettie-a-code/antigravity-ide-Research-Decision-Tracker-Capstone-Project.git
 Then enter the project folder:
-cd your-antigravity-repo
+cd antigravity-repo
 
 ---
 
 ## 📚 5. Install Dependencies
 
-Inside the project folder, run:
+- Inside the project folder, run:
 pip install -r requirements.txt
 
-If your project does not yet have a requirements.txt, you can generate one:
+- If your project does not yet have a requirements.txt, you can generate one:
 pip install streamlit
 pip freeze > requirements.txt
 
@@ -89,19 +89,7 @@ git pull
 
 ---
 
-## 🗂 8. Project Structure (Example)
-
-your-antigravity-repo/
-│
-├── app.py
-├── requirements.txt
-├── data/
-├── modules/
-└── README.md
-
----
-
-## 🛠 9. Troubleshooting
+## 🛠 8. Troubleshooting
 - Streamlit not found
 pip install streamlit
 - Permission denied (macOS/Linux)
@@ -109,21 +97,6 @@ chmod +x app.py
 - Wrong Python version
 Check version:
 python --version
-
-## 🤝 Contributing
-Pull requests are welcome.
-For major changes, please open an issue first to discuss what you would like to modify.
-
----
-
-If you want, I can also generate:
-
-- A **requirements.txt**  
-- A **setup.sh** or **setup.bat** auto‑installer  
-- A **launch.bat** so you can start the app with one double‑click  
-- A **GitHub Actions workflow** to test or deploy your app  
-
-Just tell me what you want next.
 
 
 
